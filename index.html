@@ -82,15 +82,20 @@
             .append("div")
             .attr("class", "tooltip");
 
-        const data = Array.from({ length: 50 }, (_, i) => ({
-            epoch: i,
-            loss: Math.random() * 0.5 + 0.1,
-            size: Math.random() * 20 + 10,
-            color: d3.interpolateRainbow(i / 50),
-            x: i * (width / 50) + (width / 100),
-            y: height / 2 + (Math.random() - 0.5) * 100,
-        }));
+        const data = Array.from({ length: 50 }, (_, i) => {
+            const base = Math.exp(-i / 12); // 指数衰减
+            const noise = (Math.random() - 0.5) * 0.05; // 小范围抖动
+            const loss = Math.max(0.05, base + noise); // 保底防止负数
 
+            return {
+                epoch: i,
+                loss: loss,
+                size: 15 + Math.random() * 10, // 保持气泡大小
+                color: d3.interpolateRainbow(i / 50),
+                x: i * (width / 50) + (width / 100),
+                y: height / 2 - loss * 300 + (Math.random() - 0.5) * 30, // 模拟训练曲线
+          };
+      });
         const progressDot = svg.append("circle")
             .attr("class", "progress-dot")
             .attr("r", 5)
