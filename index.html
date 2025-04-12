@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #121212;
+            background-color: transparent;
             color: #fff;
             margin: 0;
             padding: 0;
@@ -39,7 +39,7 @@
         .line {
             fill: none;
             stroke: #ffffff;
-            stroke-width: 1; /* 调整线的细度 */
+            stroke-width: 1;
             stroke-linecap: round;
             stroke-linejoin: round;
             stroke-opacity: 0.8;
@@ -53,7 +53,7 @@
             fill: #ffffff;
             stroke: none;
             stroke-width: 1;
-            r: 1; /* 小圆点的半径 */
+            r: 1;
         }
         .tooltip {
             position: absolute;
@@ -61,7 +61,7 @@
             color: white;
             padding: 8px;
             border-radius: 4px;
-            pointer-events: none; /* 防止鼠标悬停时覆盖其他元素 */
+            pointer-events: none;
             font-size: 12px;
             opacity: 0;
         }
@@ -83,19 +83,20 @@
             .attr("class", "tooltip");
 
         const data = Array.from({ length: 50 }, (_, i) => {
-            const base = Math.exp(-i / 12); // 指数衰减
-            const noise = (Math.random() - 0.5) * 0.05; // 小范围抖动
-            const loss = Math.max(0.05, base + noise); // 保底防止负数
-
+            let baseLoss = 0.8 * Math.exp(-i / 12); // 基础下降趋势
+            let noise = (Math.random() - 0.5) * 0.1; // 噪声
+            if (i > 35) baseLoss += (i - 35) * 0.005; // 过拟合迹象：后期 loss 回升
+            const loss = Math.max(0.1, baseLoss + noise);  // 设置一个最低损失值，避免过小
             return {
                 epoch: i,
                 loss: loss,
-                size: 15 + Math.random() * 10, // 保持气泡大小
+                size: 15 + (0.5 - loss) * 40, // 调整气泡的大小，使其不会太小
                 color: d3.interpolateRainbow(i / 50),
                 x: i * (width / 50) + (width / 100),
-                y: height / 2 - loss * 300 + (Math.random() - 0.5) * 30, // 模拟训练曲线
-          };
-      });
+                y: height / 2 - loss * 300 + (Math.random() - 0.5) * 20,
+            };
+        });
+
         const progressDot = svg.append("circle")
             .attr("class", "progress-dot")
             .attr("r", 5)
@@ -173,7 +174,7 @@
                 .y(d => d.y)
                 .curve(d3.curveCardinal)
             )
-            .attr("opacity", 0); // 初始时隐藏线条
+            .attr("opacity", 0);
 
         function animateBubbles(epoch) {
             const bubble = bubbles.filter(d => d.epoch === epoch);
@@ -206,12 +207,11 @@
                 epoch++;
             } else {
                 clearInterval(interval);
-                // 显示曲线：所有气泡和小圆点动画完成后显示曲线
                 line.transition()
                     .duration(1000)
-                    .attr("opacity", 1); // 逐渐显示曲线
+                    .attr("opacity", 1);
             }
-        }, 200); // 更快的间隔
+        }, 200);
     </script>
 </body>
 </html>
